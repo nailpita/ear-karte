@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="耳つぼカルテ">
+<meta name="theme-color" content="#B85C7A">
+<meta name="robots" content="noindex,nofollow">
+<title>耳つぼカルテ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap');
+
+  :root{
+    --bg:#F6F4F1; --surface:#FFFFFF; --ink:#2B2320; --ink-soft:#6B6058;
+    --line:#E6E0D8; --accent:#B85C7A; --accent-ink:#7C3A50; --accent-soft:#F3E3E8;
+    --ok:#6E8A6A; --ok-soft:#EAF1E7; --warn:#B4632F; --warn-soft:#FBEAE0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Sans JP',-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;padding:20px 14px 60px;}
+  .wrap{max-width:680px;margin:0 auto;}
+  header{margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .eyebrow{font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;font-weight:700;color:var(--accent-ink);margin:0 0 4px;}
+  h1{font-family:'Zen Kaku Gothic New',sans-serif;font-size:21px;font-weight:700;margin:0;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;}
+  .card h2{font-size:15px;font-weight:700;margin:0 0 12px;font-family:'Zen Kaku Gothic New',sans-serif;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14.5px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer;}
+  .btn:active{background:var(--accent-ink);}
+  .btn.secondary{background:var(--surface);color:var(--accent-ink);border:1.5px solid var(--accent);}
+  .btn.small{padding:8px 12px;font-size:13px;}
+  .btn.full{width:100%;}
+  .btn.icon{width:40px;height:40px;padding:0;border-radius:50%;flex:0 0 auto;}
+  .btn.ghost{background:none;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn:disabled{opacity:.4;}
+
+  input,textarea,select{
+    width:100%;font-family:'Noto Sans JP',sans-serif;font-size:16px;padding:10px 12px;
+    border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+  }
+  label.field{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+  label.field span{display:block;margin-bottom:5px;}
+  textarea{min-height:90px;resize:vertical;}
+
+  .indexRow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .indexRow button{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
+    border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;
+  }
+  .indexRow button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  .searchBar{display:flex;gap:8px;margin-bottom:14px;}
+
+  .customerList{list-style:none;margin:0;padding:0;}
+  .customerList li{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer;
+  }
+  .customerList li:last-child{border-bottom:none;}
+  .customerList .name{font-weight:600;font-size:15px;}
+  .customerList .kana{font-size:12px;color:var(--ink-soft);}
+  .customerList .rank{font-size:11.5px;background:var(--accent-soft);color:var(--accent-ink);padding:3px 9px;border-radius:999px;}
+  .customerList .cnt{font-size:11.5px;color:var(--ink-soft);margin-left:8px;}
+  .empty{color:var(--ink-soft);font-size:13.5px;text-align:center;padding:30px 10px;}
+
+  .backRow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .backRow button{background:none;border:none;color:var(--accent-ink);font-size:14px;font-weight:600;cursor:pointer;padding:6px 0;}
+
+  .profileHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .profileName{font-family:'Zen Kaku Gothic New',sans-serif;font-size:22px;font-weight:700;}
+  .profileKana{font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;}
+  .profileRank{display:inline-block;font-size:12px;background:var(--accent-soft);color:var(--accent-ink);padding:4px 12px;border-radius:999px;margin-top:4px;}
+
+  .visitCard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+  .visitDate{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:14.5px;margin-bottom:10px;}
+  .photoRow{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;}
+  .photoRow img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--line);flex:0 0 auto;}
+  .visitField{font-size:13.5px;margin-bottom:6px;}
+  .visitField b{font-weight:600;color:var(--ink-soft);display:block;font-size:11.5px;margin-bottom:2px;}
+  .visitActions{display:flex;gap:8px;margin-top:10px;}
+
+  .photoPicker{border:1.5px dashed var(--line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:14px;}
+  .photoPicker input{display:none;}
+  .photoPreview{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .photoPreview .ph{position:relative;}
+  .photoPreview img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--line);}
+  .photoPreview .rm{position:absolute;top:-6px;right:-6px;background:var(--warn);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;}
+
+  .memoWrap{position:relative;}
+  .micBtn{
+    position:absolute;right:8px;bottom:8px;width:34px;height:34px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent-ink);border:none;font-size:16px;cursor:pointer;
+  }
+  .micBtn.listening{background:var(--warn);color:#fff;}
+  .hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .msg{border-radius:10px;padding:12px 14px;font-size:13.5px;margin-bottom:14px;}
+  .msg.warn{background:var(--warn-soft);color:var(--warn);}
+  .msg.ok{background:var(--ok-soft);color:var(--ok);}
+  .hidden{display:none !important;}
+  footer{text-align:center;font-size:11.5px;color:var(--ink-soft);margin-top:20px;}
+
+  .fab{position:fixed;right:20px;bottom:24px;z-index:10;}
+  .fab .btn{box-shadow:0 6px 18px rgba(0,0,0,.18);}
+
+  /* ---- 耳つぼ ---- */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:6px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .chip.rec{border-color:var(--accent);color:var(--accent-ink);}
+  .chip.rec.on{color:#fff;}
+  .tag{display:inline-block;font-size:11px;background:var(--accent-soft);color:var(--accent-ink);padding:2px 9px;border-radius:999px;margin-right:4px;}
+  .tag.ear{background:var(--ok-soft);color:var(--ok);}
+  .aim{font-size:12.5px;color:var(--ink-soft);background:var(--bg);border-radius:8px;padding:8px 10px;margin:6px 0 12px;}
+  .earBlock{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;}
+  .earBlock h3{font-size:14px;margin:0 0 8px;font-family:'Zen Kaku Gothic New',sans-serif;}
+  .earStage{position:relative;width:100%;max-width:420px;margin:0 auto 8px;line-height:0;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .earStage img{width:100%;display:block;border-radius:10px;}
+  .earStage .mk{position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none;}
+  .earStage.static .mk{cursor:default;}
+  .earStage .dot{display:block;width:18px;height:18px;border-radius:50%;background:rgba(184,92,122,.85);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);margin:0 auto;}
+  .earStage .lbl{position:absolute;left:50%;top:20px;transform:translateX(-50%);white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;color:#fff;background:rgba(43,35,32,.75);padding:1px 5px;border-radius:4px;}
+  .earStage.static .dot{width:14px;height:14px;}
+  .earBtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .consent{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:8px;}
+  .consent input{width:auto;margin-top:5px;}
+  .tiny{font-size:11.5px;color:var(--ink-soft);}
+  .guideBox{border:1.5px dashed var(--line);border-radius:12px;padding:14px;text-align:center;font-size:13px;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">耳つぼジュエリー</p>
+      <h1 id="pageTitle">耳つぼカルテ</h1>
+    </div>
+    <button class="btn small ghost" id="dataMenuBtn">データ</button>
+  </header>
+
+  <div id="dataMenu" class="card hidden">
+    <h2>データの保存・読み込み</h2>
+    <p class="hint" style="margin-bottom:12px;">このブラウザに自動で保存されます(同じ端末・同じブラウザで開いたとき)。万一に備えて、週に1回は「カルテを保存(JSON)」でバックアップを取ってください。写真も含めて1つのファイルにまとまります。</p>
+    <div class="grid2">
+      <button class="btn secondary" id="saveDataBtn">カルテを保存(JSON)</button>
+      <button class="btn secondary" id="loadDataBtn">カルテを読み込む(JSON)</button>
+    </div>
+    <input type="file" id="dataFileInput" accept=".json" style="display:none;">
+
+    <h2 style="margin-top:20px;">耳つぼ お知らせメール設定</h2>
+    <p class="hint" style="margin-bottom:10px;">シールを外す日のお知らせは、ご自身のGoogleアカウントの「自動送信スクリプト」(gas/reminder.gs)から送られます。設定は、この端末のブラウザにだけ保存されます。</p>
+    <label class="field"><span>サロン名(メールの署名に使います)</span><input type="text" id="setSalon" placeholder="例：Kiyono Nail"></label>
+    <label class="field"><span>自動送信スクリプトのURL(ウェブアプリのURL)</span><input type="url" id="setGasUrl" placeholder="https://script.google.com/macros/s/…/exec"></label>
+    <label class="field"><span>合言葉(スクリプトに設定したものと同じ)</span><input type="password" id="setGasToken" autocomplete="off"></label>
+    <label class="field"><span>シールを外す日(来店から何日後)</span><input type="number" id="setPeelDays" min="1" max="10" value="5"></label>
+    <button class="btn secondary full" id="saveSettingsBtn">設定を保存</button>
+    <div id="settingsMsg" class="hint"></div>
+  </div>
+
+  <div id="errorArea"></div>
+
+  <!-- ============ 一覧画面 ============ -->
+  <div id="listView">
+    <div class="card">
+      <div class="searchBar">
+        <input type="text" id="searchInput" placeholder="名前・ふりがなで検索">
+      </div>
+      <div class="indexRow" id="indexRow"></div>
+      <ul class="customerList" id="customerList"></ul>
+      <div id="listEmpty" class="empty hidden">まだお客様が登録されていません。右下の「＋」から追加してください。</div>
+    </div>
+  </div>
+
+  <!-- ============ お客様詳細(フォルダ) ============ -->
+  <div id="profileView" class="hidden">
+    <div class="backRow"><button id="backToList">← お客様一覧に戻る</button></div>
+
+    <div class="card">
+      <div class="profileHead">
+        <div>
+          <div class="profileName" id="profName"></div>
+          <div class="profileKana" id="profKana"></div>
+          <div class="profileRank" id="profRank"></div>
+        </div>
+        <button class="btn small ghost" id="editProfileBtn">名前を訂正</button>
+      </div>
+    </div>
+
+    <div id="editProfileCard" class="card hidden">
+      <h2>お客様情報を編集</h2>
+      <label class="field"><span>お名前</span><input type="text" id="editName"></label>
+      <label class="field"><span>ふりがな(カナ)</span><input type="text" id="editKana" placeholder="例：タナカハナコ"></label>
+      <label class="field"><span>お客様ランク(任意)</span><input type="text" id="editRank" placeholder="例：VIP"></label>
+      <label class="field"><span>メールアドレス(耳つぼのお知らせ用・任意)</span><input type="email" id="editEmail" placeholder="例：hanako@example.com"></label>
+      <label class="consent"><input type="checkbox" id="editMailOk"><span>お知らせメールの受け取りに、お客様の同意を得ました</span></label>
+      <div class="grid2">
+        <button class="btn secondary" id="cancelEditProfile">キャンセル</button>
+        <button class="btn" id="saveEditProfile">保存</button>
+      </div>
+    </div>
+
+    <h2 style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;margin:18px 0 10px;">来店記録</h2>
+    <div id="visitList"></div>
+    <div id="visitEmpty" class="empty hidden">まだ来店記録がありません。</div>
+    <button class="btn full" id="addEarVisitBtn">＋ 新しい耳つぼの記録を追加</button>
+  </div>
+
+  <!-- ============ 来店記録 追加/編集 ============ -->
+  <div id="visitFormView" class="hidden">
+    <div class="backRow"><button id="backToProfile">← カルテに戻る</button></div>
+    <div class="card">
+      <h2 id="visitFormTitle">来店記録を追加</h2>
+
+      <div id="earFields">
+        <label class="field"><span>来店日時(アプリの時計から自動入力・変更もできます)</span><input type="datetime-local" id="earDateTime"></label>
+
+        <div class="msg warn" style="font-size:12.5px;">
+          <label class="consent"><input type="checkbox" id="earCheck1"><span>施術前の確認をしました（妊娠中・妊娠の可能性なし／通院中の場合は医師の許可あり／貼る部分の皮膚に傷や炎症なし／ピアス穴の位置を確認）</span></label>
+          <label class="consent" style="margin-bottom:0;"><input type="checkbox" id="earCheck2"><span>耳の写真とお悩みを、このカルテに保存することにお客様の同意を得ました</span></label>
+        </div>
+
+        <label class="field"><span>お客様のお悩み・気になること(タップでおすすめコースが光ります・複数OK)</span></label>
+        <div class="chips" id="concernChips"></div>
+
+        <label class="field"><span>メニュー(コース)</span>
+          <select id="earCourse"></select>
+        </label>
+        <div class="tiny" id="recLabel" style="margin-bottom:4px;"></div>
+        <div class="chips" id="recChips"></div>
+        <div class="aim" id="earAim"></div>
+
+        <label class="field"><span>追加するポイント(コースの点数に足したいとき)</span></label>
+        <div class="chips" id="extraChips"></div>
+        <div class="tiny" id="earCount" style="margin-bottom:12px;"></div>
+
+        <div class="earBlock">
+          <h3>右耳</h3>
+          <div id="stageRight"></div>
+        </div>
+        <div class="earBlock">
+          <h3>左耳</h3>
+          <div id="stageLeft"></div>
+        </div>
+        <div class="tiny" style="margin-bottom:14px;">※点は「標準的な耳の地図」をもとにした目安の位置です。実際のお客様の耳に合わせて、必ず指でドラッグして位置を調整してください。調整後の位置がそのまま保存されます。</div>
+
+        <div class="earBlock">
+          <h3>シールを外す日のお知らせメール</h3>
+          <label class="consent"><input type="checkbox" id="earNotify"><span>外す日にお客様へメールで知らせる</span></label>
+          <div class="tiny" id="earNotifyInfo"></div>
+        </div>
+      </div>
+
+      <label class="field"><span>メモ(会話内容など)</span>
+        <div class="memoWrap">
+          <textarea id="visitMemo" placeholder="会話の内容やお客様の要望などを記入"></textarea>
+          <button class="micBtn hidden" id="micBtn" type="button">🎤</button>
+        </div>
+        <div class="hint">💡 キーボードのマイクボタンからも音声入力できます</div>
+      </label>
+
+      <div class="grid2" style="margin-top:16px;">
+        <button class="btn secondary" id="cancelVisit">キャンセル</button>
+        <button class="btn" id="saveVisitBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 新規お客様 ============ -->
+  <div id="newCustomerView" class="hidden">
+    <div class="backRow"><button id="backFromNew">← 一覧に戻る</button></div>
+    <div class="card">
+      <h2>新しいお客様を登録</h2>
+      <label class="field"><span>お名前</span><input type="text" id="newName" placeholder="例：田中 花子"></label>
+      <label class="field"><span>ふりがな(カナ)</span><input type="text" id="newKana" placeholder="例：タナカハナコ"></label>
+      <label class="field"><span>お客様ランク(任意)</span><input type="text" id="newRank" placeholder="例：VIP"></label>
+      <label class="field"><span>メールアドレス(耳つぼのお知らせ用・任意)</span><input type="email" id="newEmail" placeholder="例：hanako@example.com"></label>
+      <label class="consent"><input type="checkbox" id="newMailOk"><span>お知らせメールの受け取りに、お客様の同意を得ました</span></label>
+      <button class="btn full" id="createCustomerBtn">登録する</button>
+    </div>
+  </div>
+
+  <footer>
+    データは端末内(このブラウザ)にのみ保存され、外部のサーバーやインターネットには送信されません。バックアップはJSONで保存してください。
+    <br>※「耳つぼのお知らせメール」を使う場合に限り、お客様のお名前・メールアドレス・送信日だけが、ご自身のGoogleアカウント(自動送信スクリプト)へ送られます。写真やお悩みは送られません。
+  </footer>
+</div>
+
+<div class="fab hidden" id="fabAdd">
+  <button class="btn icon" id="fabAddBtn">＋</button>
+</div>
+
+<script>
+// ---------- state ----------
+let customers = []; // {id, name, kana, rank}
+let visits = [];    // {id, customerId, date, photos:[dataURL], gel, memo}
+let idCounter = 1;
+let currentCustomerId = null;
+let editingVisitId = null;
+let pendingPhotos = [];
+
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=> String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = (n)=> String(n).padStart(2,'0');
+function todayLocal(){ const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function nowLocal(){ const d=new Date(); return `${todayLocal()}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function addDays(dateStr, n){ const [y,m,d]=dateStr.split('-').map(Number); const t=new Date(y,m-1,d+n); return `${t.getFullYear()}-${pad2(t.getMonth()+1)}-${pad2(t.getDate())}`; }
+function jpDate(dateStr){ const [y,m,d]=dateStr.split('-').map(Number); const w='日月火水木金土'[new Date(y,m-1,d).getDay()]; return `${m}月${d}日(${w})`; }
+
+// 設定(この端末のブラウザにのみ保存。JSONのカルテには含めない)
+let settings = {salon:'', gasUrl:'', token:'', peelDays:5};
+try{ Object.assign(settings, JSON.parse(localStorage.getItem('cc_settings')||'{}')); }catch(e){}
+function persistSettings(){ try{ localStorage.setItem('cc_settings', JSON.stringify(settings)); return true; }catch(e){ return false; } }
+
+function showError(msg){ $('errorArea').innerHTML = `<div class="msg warn">${msg}</div>`; }
+function clearError(){ $('errorArea').innerHTML = ''; }
+
+// ---------- view switching ----------
+function showView(name){
+  ['listView','profileView','visitFormView','newCustomerView'].forEach(v=>{
+    $(v).classList.toggle('hidden', v!==name);
+  });
+  $('fabAdd').classList.toggle('hidden', name!=='listView');
+  $('dataMenu').classList.add('hidden');
+  $('pageTitle').textContent = name==='listView' ? '耳つぼカルテ'
+    : name==='profileView' ? '耳つぼカルテ'
+    : name==='visitFormView' ? '耳つぼの記録'
+    : '新規登録';
+  clearError();
+}
+
+// ---------- 50音 index ----------
+const KANA_GROUPS = {
+  'あ':'アイウエオ','か':'カキクケコガギグゲゴ','さ':'サシスセソザジズゼゾ',
+  'た':'タチツテトダヂヅデド','な':'ナニヌネノ','は':'ハヒフヘホバビブベボパピプペポ',
+  'ま':'マミムメモ','や':'ヤユヨ','ら':'ラリルレロ','わ':'ワヲン'
+};
+function toKatakana(s){
+  return (s||'').replace(/[\u3041-\u3096]/g, ch => String.fromCharCode(ch.charCodeAt(0)+0x60));
+}
+function kanaGroupOf(kana){
+  const k = toKatakana(kana).charAt(0);
+  for(const g in KANA_GROUPS){ if(KANA_GROUPS[g].includes(k)) return g; }
+  return '他';
+}
+
+let activeIndex = null;
+function renderIndexRow(){
+  const groups = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
+  $('indexRow').innerHTML = groups.map(g=>`<button data-g="${g}" class="${activeIndex===g?'active':''}">${g}</button>`).join('')
+    + `<button data-g="all" class="${activeIndex===null?'active':''}">すべて</button>`;
+  $('indexRow').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeIndex = btn.dataset.g==='all' ? null : btn.dataset.g;
+      renderIndexRow();
+      renderCustomerList();
+    });
+  });
+}
+
+// ---------- customer list ----------
+function renderCustomerList(){
+  const q = $('searchInput').value.trim();
+  const qKana = toKatakana(q);
+  let list = [...customers];
+  if(activeIndex) list = list.filter(c=> kanaGroupOf(c.kana)===activeIndex);
+  if(q) list = list.filter(c=> c.name.includes(q) || toKatakana(c.kana).includes(qKana));
+  list.sort((a,b)=> toKatakana(a.kana).localeCompare(toKatakana(b.kana), 'ja'));
+
+  $('customerList').innerHTML = list.map(c=>{
+    const cnt = visits.filter(v=>v.customerId===c.id).length;
+    return `<li data-id="${c.id}">
+      <div><div class="name">${c.name}</div><div class="kana">${c.kana||''}</div></div>
+      <div style="display:flex;align-items:center;">
+        ${c.rank?`<span class="rank">${c.rank}</span>`:''}
+        <span class="cnt">${cnt}件</span>
+      </div>
+    </li>`;
+  }).join('');
+  $('listEmpty').classList.toggle('hidden', list.length>0);
+
+  $('customerList').querySelectorAll('li').forEach(li=>{
+    li.addEventListener('click', ()=> openProfile(parseInt(li.dataset.id,10)) );
+  });
+}
+$('searchInput').addEventListener('input', renderCustomerList);
+
+// ---------- profile (customer folder) ----------
+function openProfile(id){
+  currentCustomerId = id;
+  const c = customers.find(c=>c.id===id);
+  if(!c) return;
+  $('profName').textContent = c.name;
+  $('profKana').textContent = c.kana||'';
+  $('profRank').textContent = c.rank||'';
+  $('profRank').classList.toggle('hidden', !c.rank);
+  $('editProfileCard').classList.add('hidden');
+  renderVisitList();
+  showView('profileView');
+}
+
+$('editProfileBtn').addEventListener('click', ()=>{
+  const c = customers.find(c=>c.id===currentCustomerId);
+  $('editName').value = c.name;
+  $('editKana').value = c.kana||'';
+  $('editRank').value = c.rank||'';
+  $('editEmail').value = c.email||'';
+  $('editMailOk').checked = !!c.mailOk;
+  $('editProfileCard').classList.remove('hidden');
+});
+$('cancelEditProfile').addEventListener('click', ()=> $('editProfileCard').classList.add('hidden') );
+$('saveEditProfile').addEventListener('click', ()=>{
+  const name = $('editName').value.trim();
+  if(!name){ showError('お名前を入力してください。'); return; }
+  clearError();
+  const c = customers.find(c=>c.id===currentCustomerId);
+  const email = $('editEmail').value.trim();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showError('メールアドレスの形式を確認してください。'); return; }
+  c.name = name; c.kana = $('editKana').value.trim(); c.rank = $('editRank').value.trim();
+  c.email = email; c.mailOk = !!email && $('editMailOk').checked;
+  $('editProfileCard').classList.add('hidden');
+  openProfile(currentCustomerId);
+});
+
+function renderVisitList(){
+  const list = visits.filter(v=>v.customerId===currentCustomerId).sort((a,b)=> (b.datetime||b.date).localeCompare(a.datetime||a.date));
+  $('visitList').innerHTML = list.map(v=> v.type==='ear' ? earVisitCardHtml(v) : `
+    <div class="visitCard">
+      <div class="visitDate">${v.date}</div>
+      ${v.photos && v.photos.length ? `<div class="photoRow">${v.photos.map(p=>`<img src="${p}">`).join('')}</div>` : ''}
+      ${v.gel ? `<div class="visitField"><b>使用ジェル・パーツ</b>${v.gel}</div>` : ''}
+      ${v.memo ? `<div class="visitField"><b>メモ</b>${v.memo.replace(/\n/g,'<br>')}</div>` : ''}
+      <div class="visitActions">
+        <button class="btn small ghost" data-edit="${v.id}">編集</button>
+        <button class="btn small ghost" data-del="${v.id}">削除</button>
+      </div>
+    </div>
+  `).join('');
+  $('visitEmpty').classList.toggle('hidden', list.length>0);
+
+  $('visitList').querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> openVisitForm(parseInt(b.dataset.edit,10)) ));
+  $('visitList').querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=>{
+    const id = parseInt(b.dataset.del,10);
+    const v = visits.find(v=>v.id===id);
+    if(v && v.type==='ear' && !confirm('この耳つぼの記録を削除しますか?(予約済みのお知らせメールも取り消します)')) return;
+    if(v && v.type==='ear' && v.notifyStatus==='scheduled') cancelReminder(v);
+    visits = visits.filter(v=>v.id!==id);
+    renderVisitList();
+    renderCustomerList();
+  }));
+  $('visitList').querySelectorAll('[data-export]').forEach(b=> b.addEventListener('click', ()=>{
+    const [vid, side] = b.dataset.export.split(':');
+    exportEar(visits.find(v=>v.id===parseInt(vid,10)), side);
+  }));
+}
+
+$('backToList').addEventListener('click', ()=>{ currentCustomerId=null; renderCustomerList(); showView('listView'); });
+
+// ---------- visit form ----------
+let formType = 'ear';
+function openVisitForm(visitId, type){
+  editingVisitId = visitId || null;
+  const existing = editingVisitId ? visits.find(v=>v.id===editingVisitId) : null;
+  formType = 'ear';
+  openEarForm(existing);
+}
+$('addEarVisitBtn').addEventListener('click', ()=> openVisitForm(null,'ear') );
+$('backToProfile').addEventListener('click', ()=> openProfile(currentCustomerId) );
+$('cancelVisit').addEventListener('click', ()=> openProfile(currentCustomerId) );
+
+function resizeImage(file){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxW = 900;
+        const scale = Math.min(1, maxW/img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width*scale;
+        canvas.height = img.height*scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$('saveVisitBtn').addEventListener('click', ()=> saveEarVisit());
+
+// ================= 耳つぼ =================
+// 右耳を真横から見た「標準的な耳の地図」の目安位置 [x:0-100, y:0-140]。耳たぶが下、耳珠(顔側)が右。
+// ※あくまで初期位置の目安。実際の耳に合わせてドラッグで調整する前提。教科書・メーカー資料に合わせて値を直してください。
+const EAR_POS = {
+  '神門':[52,32],'腎':[40,50],'胃':[56,58],'直腸':[30,62],'大腸':[44,64],'便秘点':[36,68],'肩':[14,62],
+  '心':[60,70],'肺':[48,80],'飢点':[84,60],'渇点':[86,50],'内分泌':[68,96],'枕':[48,98],'頸椎':[36,92],
+  '上顎':[66,106],'下顎':[52,112],'眼':[60,120],'面頰':[50,126]
+};
+// 「ねらい」は効果効能の表現ではなく、気分・習慣としてのご案内用の説明です。
+const COURSES = [
+  {id:'A',name:'フェイスライン',points:['下顎','上顎','面頰'],aim:'顔まわりをすっきり見せたい、毎日のお手入れの気分を上げたい方のご案内用。'},
+  {id:'B',name:'美肌',points:['神門','肺','内分泌'],aim:'肌のコンディションが気になる方の、リラックスタイムのご案内用。'},
+  {id:'C',name:'ボディ',points:['神門','飢点','肺'],aim:'食事や体型を意識して過ごしたい方の、ごほうび習慣のご案内用。'},
+  {id:'D',name:'肩・目',points:['肩','頸椎','眼'],aim:'パソコンやスマホの時間が長い方の、ひと休みのご案内用。'},
+  {id:'E',name:'腸',points:['直腸','大腸','肺'],aim:'お腹まわりやお通じのリズムを意識したい方のご案内用。'},
+  {id:'F',name:'腎',points:['腎','渇点','心'],aim:'年齢を重ねて、めぐりやうるおいを意識したい方のご案内用。'},
+  {id:'G',name:'夜のいたわり(追加コース)',points:['神門','内分泌','心'],aim:'気分のゆらぎが気になる時期を、おだやかに過ごしたい方のご案内用。'},
+  {id:'H',name:'おやすみ前(追加コース)',points:['神門','腎','心','枕'],aim:'寝る前のリラックス習慣をつくりたい方のご案内用。'},
+  {id:'I',name:'すっきりボディ(追加コース)',points:['飢点','胃','神門'],aim:'食べ過ぎが気になる方の、食習慣を意識するきっかけのご案内用。'},
+  {id:'J',name:'お通じケア(追加コース)',points:['便秘点','大腸','神門'],aim:'お通じのリズムを意識したい方のご案内用。'}
+];
+const CONCERNS = [
+  {label:'フェイスライン・顔のむくみ感',c:['A']},{label:'肌荒れ・くすみ',c:['B']},
+  {label:'食べ過ぎ・体型',c:['C','I']},{label:'肩のつらさ・目の疲れ',c:['D']},
+  {label:'お腹・お通じ',c:['E','J']},{label:'冷え・むくみ・年齢サイン',c:['F']},
+  {label:'更年期・気分のゆらぎ',c:['G']},{label:'眠り・寝つき',c:['H']}
+];
+const courseById = (id)=> COURSES.find(c=>c.id===id);
+
+let earForm = null; // {concerns:[], course:'', extra:[], right:{photo,marks}, left:{photo,marks}}
+
+function earPoints(f){
+  const base = f.course ? courseById(f.course).points : [];
+  return [...new Set([...base, ...f.extra])];
+}
+function defaultMark(k, side){
+  const [x,y] = EAR_POS[k];
+  return {k, x: side==='right' ? x/100 : 1-x/100, y: y/140};
+}
+function syncMarks(){
+  const pts = earPoints(earForm);
+  ['right','left'].forEach(side=>{
+    const old = earForm[side].marks;
+    earForm[side].marks = pts.map(k=> old.find(m=>m.k===k) || defaultMark(k, side));
+  });
+}
+
+function stageHtml(photo, marks, isStatic){
+  return `<div class="earStage ${isStatic?'static':''}"><img src="${photo}" alt="">${
+    marks.map(m=>`<div class="mk" data-k="${esc(m.k)}" style="left:${(m.x*100).toFixed(2)}%;top:${(m.y*100).toFixed(2)}%"><span class="dot"></span><span class="lbl">${esc(m.k)}</span></div>`).join('')
+  }</div>`;
+}
+
+function renderEarStage(side){
+  const el = $(side==='right' ? 'stageRight' : 'stageLeft');
+  const d = earForm[side];
+  const name = side==='right' ? '右耳' : '左耳';
+  if(!d.photo){
+    el.innerHTML = `<label class="photoPicker" style="margin-bottom:6px;"><input type="file" accept="image/*" capture="environment" data-side="${side}"><span>📷 ${name}を撮影・選択</span></label>
+      <div class="tiny">耳が画面いっぱいになるよう、耳の真横からまっすぐ撮影してください。髪は耳にかけてください。</div>`;
+  } else {
+    el.innerHTML = stageHtml(d.photo, d.marks, false) +
+      `<div class="earBtns"><label class="btn small secondary" style="cursor:pointer;">撮り直す<input type="file" accept="image/*" capture="environment" data-side="${side}" style="display:none;"></label>
+       <button class="btn small ghost" type="button" data-reset="${side}">点を初期位置に戻す</button></div>`;
+    const stage = el.querySelector('.earStage');
+    stage.querySelectorAll('.mk').forEach(mk=>{
+      mk.addEventListener('pointerdown', (e)=>{
+        e.preventDefault();
+        mk.setPointerCapture(e.pointerId);
+        const mark = d.marks.find(m=>m.k===mk.dataset.k);
+        const move = (ev)=>{
+          const r = stage.getBoundingClientRect();
+          mark.x = Math.min(1, Math.max(0, (ev.clientX - r.left)/r.width));
+          mark.y = Math.min(1, Math.max(0, (ev.clientY - r.top)/r.height));
+          mk.style.left = (mark.x*100)+'%'; mk.style.top = (mark.y*100)+'%';
+        };
+        const up = ()=>{ mk.removeEventListener('pointermove', move); mk.removeEventListener('pointerup', up); mk.removeEventListener('pointercancel', up); };
+        mk.addEventListener('pointermove', move); mk.addEventListener('pointerup', up); mk.addEventListener('pointercancel', up);
+      });
+    });
+    el.querySelector('[data-reset]').addEventListener('click', ()=>{
+      d.marks = d.marks.map(m=>defaultMark(m.k, side));
+      renderEarStage(side);
+    });
+  }
+  el.querySelectorAll('input[type=file]').forEach(inp=> inp.addEventListener('change', async (e)=>{
+    const f = e.target.files[0]; if(!f) return;
+    d.photo = await resizeImage(f);
+    syncMarks();
+    renderEarStage(side);
+  }));
+}
+
+function renderEarForm(){
+  // お悩み → おすすめコース
+  $('concernChips').innerHTML = CONCERNS.map((c,i)=>`<button type="button" class="chip ${earForm.concerns.includes(c.label)?'on':''}" data-i="${i}">${esc(c.label)}</button>`).join('');
+  $('concernChips').querySelectorAll('.chip').forEach(b=> b.addEventListener('click', ()=>{
+    const lab = CONCERNS[+b.dataset.i].label;
+    earForm.concerns = earForm.concerns.includes(lab) ? earForm.concerns.filter(x=>x!==lab) : [...earForm.concerns, lab];
+    renderEarForm();
+  }));
+  const rec = [...new Set(CONCERNS.filter(c=>earForm.concerns.includes(c.label)).flatMap(c=>c.c))];
+  $('recLabel').textContent = rec.length ? 'お悩みからのおすすめコース(タップで選択)：' : '';
+  $('recChips').innerHTML = rec.map(id=>`<button type="button" class="chip rec ${earForm.course===id?'on':''}" data-c="${id}">${id} ${esc(courseById(id).name)}</button>`).join('');
+  $('recChips').querySelectorAll('.chip').forEach(b=> b.addEventListener('click', ()=>{ earForm.course=b.dataset.c; syncMarks(); renderEarForm(); }));
+
+  $('earCourse').innerHTML = `<option value="">選択してください</option>` + COURSES.map(c=>`<option value="${c.id}" ${earForm.course===c.id?'selected':''}>${c.id} ${esc(c.name)}(片耳${c.points.length}点)</option>`).join('');
+  $('earAim').textContent = earForm.course ? 'ねらい(ご案内用)：' + courseById(earForm.course).aim : 'コースを選ぶと、ご案内用の説明が表示されます。';
+  $('earAim').classList.toggle('hidden', false);
+
+  const base = earForm.course ? courseById(earForm.course).points : [];
+  $('extraChips').innerHTML = Object.keys(EAR_POS).filter(k=>!base.includes(k)).map(k=>`<button type="button" class="chip ${earForm.extra.includes(k)?'on':''}" data-k="${esc(k)}">${esc(k)}</button>`).join('');
+  $('extraChips').querySelectorAll('.chip').forEach(b=> b.addEventListener('click', ()=>{
+    const k=b.dataset.k;
+    earForm.extra = earForm.extra.includes(k) ? earForm.extra.filter(x=>x!==k) : [...earForm.extra,k];
+    syncMarks(); renderEarForm();
+  }));
+  const n = earPoints(earForm).length;
+  $('earCount').textContent = `片耳${n}点 ／ 両耳で${n*2}点` + (earForm.extra.length ? `(コース${base.length}点＋追加${earForm.extra.length}点)` : '');
+  renderEarStage('right'); renderEarStage('left');
+  updateNotifyInfo();
+}
+$('earCourse').addEventListener('change', (e)=>{ earForm.course = e.target.value; syncMarks(); renderEarForm(); });
+
+function peelDateFor(dt){ return addDays(dt.slice(0,10), Math.max(1, parseInt(settings.peelDays,10)||5)); }
+function notifyBlockReason(){
+  const c = customers.find(c=>c.id===currentCustomerId);
+  if(!c || !c.email || !c.mailOk) return 'このお客様のメールアドレスと同意が未登録です。(カルテ上部「名前を訂正」から登録できます)';
+  if(!settings.gasUrl || !settings.token) return 'お知らせメールの設定が未完了です。(右上「データ」→「耳つぼ お知らせメール設定」)';
+  return '';
+}
+function updateNotifyInfo(){
+  const reason = notifyBlockReason();
+  const chk = $('earNotify');
+  chk.disabled = !!reason;
+  if(reason){ chk.checked = false; $('earNotifyInfo').textContent = reason; return; }
+  const dt = $('earDateTime').value;
+  $('earNotifyInfo').textContent = dt ? `${jpDate(peelDateFor(dt))} の朝9時ごろ、ご登録のメールアドレスへ自動で送られます。` : '';
+}
+$('earDateTime').addEventListener('input', updateNotifyInfo);
+
+function openEarForm(v){
+  const c = customers.find(c=>c.id===currentCustomerId);
+  earForm = v ? {
+    concerns:[...(v.concerns||[])], course:v.course||'', extra:[...(v.extra||[])],
+    right:{photo:v.right&&v.right.photo||null, marks:JSON.parse(JSON.stringify(v.right&&v.right.marks||[]))},
+    left:{photo:v.left&&v.left.photo||null, marks:JSON.parse(JSON.stringify(v.left&&v.left.marks||[]))}
+  } : {concerns:[], course:'', extra:[], right:{photo:null,marks:[]}, left:{photo:null,marks:[]}};
+  $('visitFormTitle').textContent = (v?'耳つぼの記録を編集':'耳つぼの記録を追加') + (c?`(${c.name} 様)`:'');
+  $('earDateTime').value = v ? v.datetime : nowLocal();
+  $('earCheck1').checked = !!(v && v.checked); $('earCheck2').checked = !!(v && v.consent);
+  $('visitMemo').value = v ? (v.memo||'') : '';
+  renderEarForm();
+  $('earNotify').checked = !!(v && v.notify) && !$('earNotify').disabled;
+  showView('visitFormView');
+}
+
+async function saveEarVisit(){
+  const dt = $('earDateTime').value;
+  if(!dt){ showError('来店日時を入力してください。'); return; }
+  if(!earForm.course){ showError('メニュー(コース)を選んでください。'); return; }
+  if(!$('earCheck1').checked || !$('earCheck2').checked){ showError('施術前の確認と、写真・お悩み保存の同意にチェックを入れてください。'); return; }
+  clearError();
+  const notify = $('earNotify').checked && !notifyBlockReason();
+  const data = {
+    type:'ear', customerId:currentCustomerId, date:dt.slice(0,10), datetime:dt,
+    concerns:[...earForm.concerns], course:earForm.course, extra:[...earForm.extra],
+    right:{photo:earForm.right.photo, marks:earForm.right.marks}, left:{photo:earForm.left.photo, marks:earForm.left.marks},
+    memo:$('visitMemo').value.trim(), checked:true, consent:true,
+    notify, peelDate: notify ? peelDateFor(dt) : '', notifyStatus:''
+  };
+  let v;
+  if(editingVisitId){
+    v = visits.find(x=>x.id===editingVisitId);
+    const wasScheduled = v.notifyStatus==='scheduled';
+    Object.assign(v, data);
+    if(!notify && wasScheduled) cancelReminder(v);
+  } else {
+    v = Object.assign({id:idCounter++}, data);
+    visits.push(v);
+  }
+  if(notify){
+    $('saveVisitBtn').disabled = true;
+    const ok = await scheduleReminder(v);
+    v.notifyStatus = ok ? 'scheduled' : 'failed';
+    $('saveVisitBtn').disabled = false;
+  }
+  openProfile(currentCustomerId);
+  if(notify && v.notifyStatus==='failed') showError('記録は保存しましたが、お知らせメールの予約に失敗しました。設定のURL・合言葉と通信状況を確認し、もう一度「編集」→「保存」を押してください。');
+}
+
+function earVisitCardHtml(v){
+  const c = courseById(v.course) || {id:'',name:'',points:[]};
+  const pts = [...new Set([...(c.points||[]), ...(v.extra||[])])];
+  const side = (s,label)=> v[s] && v[s].photo ? `<div class="earBlock"><h3>${label}</h3>${stageHtml(v[s].photo, v[s].marks||[], true)}<div class="earBtns"><button class="btn small ghost" data-export="${v.id}:${s}">${label}を画像で保存</button></div></div>` : '';
+  const st = v.notify ? (v.notifyStatus==='scheduled' ? `✉ ${jpDate(v.peelDate)} に自動メール予約済み` : `⚠ お知らせメールが予約できていません(編集→保存で再試行)`) : '';
+  return `<div class="visitCard">
+    <div class="visitDate"><span class="tag ear">耳つぼ</span>${esc(v.datetime.replace('T',' '))}</div>
+    <div class="visitField"><b>メニュー</b>${esc(v.course)} ${esc(c.name)}(${pts.map(esc).join('・')} ／ 片耳${pts.length}点)</div>
+    ${v.concerns&&v.concerns.length?`<div class="visitField"><b>お悩み</b>${v.concerns.map(esc).join('、')}</div>`:''}
+    ${side('right','右耳')}${side('left','左耳')}
+    ${v.memo?`<div class="visitField"><b>メモ</b>${esc(v.memo).replace(/\n/g,'<br>')}</div>`:''}
+    ${st?`<div class="visitField"><b>シールを外す日</b>${esc(st)}</div>`:''}
+    <div class="visitActions">
+      <button class="btn small ghost" data-edit="${v.id}">編集</button>
+      <button class="btn small ghost" data-del="${v.id}">削除</button>
+    </div>
+  </div>`;
+}
+
+// 写真＋点＋名前を1枚の画像にして保存
+function exportEar(v, side){
+  const d = v && v[side]; if(!d || !d.photo) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+    const g = cv.getContext('2d'); g.drawImage(img,0,0);
+    const r = Math.max(8, img.width/45); g.font = `700 ${Math.round(r*1.3)}px sans-serif`; g.textAlign='center';
+    (d.marks||[]).forEach(m=>{
+      const x=m.x*cv.width, y=m.y*cv.height;
+      g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fillStyle='rgba(184,92,122,.85)'; g.fill(); g.lineWidth=3; g.strokeStyle='#fff'; g.stroke();
+      const w = g.measureText(m.k).width+10, h=r*1.7;
+      g.fillStyle='rgba(43,35,32,.75)'; g.fillRect(x-w/2, y+r+3, w, h);
+      g.fillStyle='#fff'; g.fillText(m.k, x, y+r+3+h*0.78);
+    });
+    const c = customers.find(c=>c.id===v.customerId);
+    cv.toBlob(b=>{
+      const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+      a.download=`耳つぼ_${c?c.name:''}_${side==='right'?'右耳':'左耳'}_${v.datetime.slice(0,10)}.jpg`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }, 'image/jpeg', 0.9);
+  };
+  img.src = d.photo;
+}
+
+// ---- お知らせメール(自動送信スクリプトへ依頼) ----
+function mailContent(c, days){
+  const salon = settings.salon || 'サロン';
+  return {
+    subject: `【${salon}】耳つぼジュエリーを外す日のお知らせ`,
+    body: `${c.name} 様\n\n先日はご来店ありがとうございました。${salon}です。\n\n耳つぼジュエリーを貼ってから${days}日が経ちました。本日がシールを外す目安の日です。ご自宅でやさしく外してください。\n\n・かゆみ、赤み、かぶれなど、お肌に違和感があるときは、すぐに外してお肌を休ませてください。\n・貼ったままにすると、日が経つにつれてシールがベタつきやすくなります。\n\n次回のご予約や、ご自宅用のセルフキットのご相談は、お気軽にご連絡ください。\n\n${salon}`
+  };
+}
+async function callGas(payload){
+  try{
+    const res = await fetch(settings.gasUrl, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(Object.assign({token:settings.token}, payload))});
+    const j = await res.json();
+    return !!j.ok;
+  }catch(e){ return false; }
+}
+function scheduleReminder(v){
+  const c = customers.find(c=>c.id===v.customerId);
+  const days = Math.max(1, parseInt(settings.peelDays,10)||5);
+  const m = mailContent(c, days);
+  return callGas({action:'schedule', key:`${v.customerId}-${v.id}`, sendDate:v.peelDate, to:c.email, subject:m.subject, body:m.body, sender:settings.salon||''});
+}
+function cancelReminder(v){
+  if(!settings.gasUrl || !settings.token) return Promise.resolve(false);
+  return callGas({action:'cancel', key:`${v.customerId}-${v.id}`});
+}
+
+// 設定画面
+function fillSettings(){
+  $('setSalon').value = settings.salon||''; $('setGasUrl').value = settings.gasUrl||'';
+  $('setGasToken').value = settings.token||''; $('setPeelDays').value = settings.peelDays||5;
+}
+$('saveSettingsBtn').addEventListener('click', ()=>{
+  const url = $('setGasUrl').value.trim();
+  if(url && !/^https:\/\/script\.google\.com\/macros\/s\/[^\s]+\/exec$/.test(url)){ $('settingsMsg').textContent = 'URLが正しくありません。https://script.google.com/macros/s/…/exec の形式です。'; return; }
+  settings = {salon:$('setSalon').value.trim(), gasUrl:url, token:$('setGasToken').value, peelDays:Math.min(10,Math.max(1,parseInt($('setPeelDays').value,10)||5))};
+  $('settingsMsg').textContent = persistSettings() ? '設定を保存しました。' : 'このブラウザでは設定を保存できませんでした。';
+});
+fillSettings();
+
+// optional: webkitSpeechRecognition button (feature-detected; falls back silently)
+(function setupMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return; // not supported here — keyboard dictation still works
+  const micBtn = $('micBtn');
+  micBtn.classList.remove('hidden');
+  const rec = new SR();
+  rec.lang = 'ja-JP';
+  rec.continuous = true;
+  rec.interimResults = false;
+  let listening = false;
+  rec.onresult = (e)=>{
+    let text='';
+    for(let i=e.resultIndex;i<e.results.length;i++) text += e.results[i][0].transcript;
+    const ta = $('visitMemo');
+    ta.value = ta.value + (ta.value && !ta.value.endsWith('\n') ? '\n' : '') + text;
+  };
+  rec.onend = ()=>{ listening=false; micBtn.classList.remove('listening'); };
+  micBtn.addEventListener('click', ()=>{
+    if(listening){ rec.stop(); listening=false; micBtn.classList.remove('listening'); }
+    else{ rec.start(); listening=true; micBtn.classList.add('listening'); }
+  });
+})();
+
+// ---------- new customer ----------
+$('fabAddBtn').addEventListener('click', ()=>{
+  $('newName').value=''; $('newKana').value=''; $('newRank').value=''; $('newEmail').value=''; $('newMailOk').checked=false;
+  showView('newCustomerView');
+});
+$('backFromNew').addEventListener('click', ()=>{ renderCustomerList(); showView('listView'); });
+$('createCustomerBtn').addEventListener('click', ()=>{
+  const name = $('newName').value.trim();
+  const kana = $('newKana').value.trim();
+  if(!name){ showError('お名前を入力してください。'); return; }
+  const email = $('newEmail').value.trim();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showError('メールアドレスの形式を確認してください。'); return; }
+  clearError();
+  const id = idCounter++;
+  customers.push({id, name, kana, rank: $('newRank').value.trim(), email, mailOk: !!email && $('newMailOk').checked});
+  renderCustomerList();
+  openProfile(id);
+});
+
+// ---------- data save/load ----------
+$('dataMenuBtn').addEventListener('click', ()=> $('dataMenu').classList.toggle('hidden') );
+$('saveDataBtn').addEventListener('click', ()=>{
+  const payload = {customers, visits, idCounter, savedAt:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download = `CustomerCard_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+$('loadDataBtn').addEventListener('click', ()=> $('dataFileInput').click() );
+$('dataFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const data = JSON.parse(await file.text());
+    if(!Array.isArray(data.customers) || !Array.isArray(data.visits)) throw new Error('invalid');
+    const existingCust = new Set(customers.map(c=>c.id));
+    data.customers.forEach(c=>{ if(!existingCust.has(c.id)) customers.push(c); });
+    const existingVisit = new Set(visits.map(v=>v.id));
+    data.visits.forEach(v=>{ if(!existingVisit.has(v.id)) visits.push(v); });
+    idCounter = Math.max(idCounter, data.idCounter||1);
+    renderCustomerList();
+    $('dataMenu').classList.add('hidden');
+  } catch(err){
+    showError('データの読み込みに失敗しました。このアプリで保存したJSONファイルを選んでください。');
+  }
+});
+
+
+// ---------- 自動保存(このブラウザのIndexedDB) ----------
+const DB_NAME='ear_karte', STORE='kv';
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbGet(k){ const db=await idb(); return new Promise((res,rej)=>{ const q=db.transaction(STORE).objectStore(STORE).get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+async function idbSet(k,v){ const db=await idb(); return new Promise((res,rej)=>{ const t=db.transaction(STORE,'readwrite'); t.objectStore(STORE).put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+let lastSaved='';
+async function autosave(){
+  try{
+    const snap = JSON.stringify({customers, visits, idCounter});
+    if(snap===lastSaved) return;
+    await idbSet('state', snap); lastSaved = snap;
+  }catch(e){ showError('自動保存できませんでした。JSONで保存してください。'); }
+}
+async function autoload(){
+  try{
+    const snap = await idbGet('state');
+    if(snap){ const d=JSON.parse(snap); customers=d.customers||[]; visits=d.visits||[]; idCounter=d.idCounter||1; lastSaved=snap; }
+  }catch(e){}
+}
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+setInterval(autosave, 2000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') autosave(); });
+window.addEventListener('pagehide', autosave);
+
+// ---------- init ----------
+autoload().then(()=>{ renderIndexRow(); renderCustomerList(); showView('listView'); });
+</script>
+</body>
+</html>
