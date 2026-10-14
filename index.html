@@ -185,7 +185,7 @@
           <div class="profileKana" id="profKana"></div>
           <div class="profileRank" id="profRank"></div>
         </div>
-        <button class="btn small ghost" id="editProfileBtn">名前を訂正</button>
+        <div style="display:flex;flex-direction:column;gap:6px;"><button class="btn small ghost" id="editProfileBtn">名前を訂正</button><button class="btn small ghost" id="deleteCustomerBtn" style="color:var(--warn);">お客様を削除</button></div>
       </div>
     </div>
 
@@ -400,6 +400,21 @@ function openProfile(id){
   renderVisitList();
   showView('profileView');
 }
+
+
+$('deleteCustomerBtn').addEventListener('click', async ()=>{
+  const c = customers.find(c=>c.id===currentCustomerId); if(!c) return;
+  const vs = visits.filter(v=>v.customerId===c.id);
+  if(!confirm(`「${c.name}」様のカルテを削除します。\n来店記録${vs.length}件と写真もすべて消え、元に戻せません。\n(予約済みのお知らせメールも取り消します)\n\n削除しますか?`)) return;
+  const sched = vs.filter(v=>v.type==='ear' && v.notifyStatus==='scheduled');
+  let cancelFailed = 0;
+  for(const v of sched){ const ok = await cancelReminder(v); if(!ok) cancelFailed++; }
+  visits = visits.filter(v=>v.customerId!==c.id);
+  customers = customers.filter(x=>x.id!==c.id);
+  currentCustomerId = null;
+  renderCustomerList(); showView('listView');
+  if(cancelFailed) showError(`削除しました。ただし、お知らせメールの取り消しに${cancelFailed}件失敗しました。Googleドライブの「耳つぼお知らせメール予約」シートで、該当の行のstatusを「cancelled」に変えてください。`);
+});
 
 $('editProfileBtn').addEventListener('click', ()=>{
   const c = customers.find(c=>c.id===currentCustomerId);
@@ -733,7 +748,7 @@ function mailContent(c, days){
   const salon = settings.salon || 'サロン';
   return {
     subject: `【${salon}】耳つぼジュエリーを外す日のお知らせ`,
-    body: `${c.name} 様\n\n先日はご来店ありがとうございました。${salon}です。\n\n耳つぼジュエリーを貼ってから${days}日が経ちました。本日がシールを外す目安の日です。ご自宅でやさしく外してください。\n\n・かゆみ、赤み、かぶれなど、お肌に違和感があるときは、すぐに外してお肌を休ませてください。\n・貼ったままにすると、日が経つにつれてシールがベタつきやすくなります。\n\n次回のご予約や、ご自宅用のセルフキットのご相談は、お気軽にご連絡ください。\n\n${salon}`
+    body: `${c.name} 様\n\n先日はご来店ありがとうございました。${salon}です。\n\n耳つぼジュエリーを貼ってから${days}日が経ちました。その後、テープ部分のかゆみや赤み、お体の様子に気になることはございませんでしたか?\nもし違和感があるときは、無理をせず、すぐに外してお肌を休ませてくださいね。\n\n本日がシールを外す目安の日です。ご自宅でやさしく外してください。\n\n・貼ったままにすると、日が経つにつれてシールがベタつきやすくなります。\n・外したあとも、気になることがあれば、いつでもご連絡ください。\n\n次回のご予約や、ご自宅用のセルフキットのご相談は、お気軽にご連絡ください。\n\n${salon}`
   };
 }
 async function callGas(payload){
