@@ -124,6 +124,10 @@
   .earStage .lbl{position:absolute;left:50%;top:20px;transform:translateX(-50%);white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;color:#fff;background:rgba(43,35,32,.75);padding:1px 5px;border-radius:4px;}
   .earStage.static .dot{width:14px;height:14px;}
   .earBtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .earStage.aligning{cursor:crosshair;outline:3px solid #b85c7a;border-radius:10px;}
+  .earStage.aligning .mk{pointer-events:none;opacity:.35;}
+  .earStage .lm{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#2b6cb0;color:#fff;font-size:13px;font-weight:700;line-height:22px;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none;}
+  .alignMsg{font-size:14px;font-weight:700;color:#b85c7a;margin:4px 0 6px;line-height:1.5;}
   .consent{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:8px;}
   .consent input{width:auto;margin-top:5px;}
   .tiny{font-size:11.5px;color:var(--ink-soft);}
@@ -548,6 +552,55 @@ function defaultMark(k, side){
   const [x,y] = EAR_POS[k];
   return {k, x: side==='right' ? x/100 : 1-x/100, y: y/140};
 }
+// 耳の目印3か所(耳の一番上・耳たぶの一番下・顔側に一番出ているところ)の標準位置(右耳・x0-100,y0-140)
+const LM_STD = [[65,0],[68,140],[100,57]];
+const LM_TEXT = ['① 耳の「一番上」をタップ','② 耳たぶの「一番下」をタップ','③ 耳の「顔側に一番出ているところ(耳珠のあたり)」をタップ'];
+// 標準位置の3点 → 写真上の3点 へのアフィン変換(傾き・大きさ・向きに自動で合わせる)
+function affineFrom(S, P){
+  const det3 = (a)=> a[0][0]*(a[1][1]*a[2][2]-a[1][2]*a[2][1]) - a[0][1]*(a[1][0]*a[2][2]-a[1][2]*a[2][0]) + a[0][2]*(a[1][0]*a[2][1]-a[1][1]*a[2][0]);
+  const A = S.map(p=>[p[0],p[1],1]);
+  const D = det3(A);
+  if(Math.abs(D) < 1e-6) return null;
+  const solve = (b)=> [0,1,2].map(c=>{ const M = A.map((r,i)=>r.map((v,j)=> j===c ? b[i] : v)); return det3(M)/D; });
+  const cx = solve(P.map(p=>p[0])), cy = solve(P.map(p=>p[1]));
+  return (u,v)=>[cx[0]*u+cx[1]*v+cx[2], cy[0]*u+cy[1]*v+cy[2]];
+}
+function applyAlign(side, pts){
+  const S = LM_STD.map(([x,y])=> side==='right' ? [x,y] : [100-x,y]);
+  const f = affineFrom(S, pts);
+  if(!f) return false;
+  earForm[side].marks = earForm[side].marks.map(m=>{
+    const [x,y] = EAR_POS[m.k];
+    const [u,v] = f(side==='right' ? x : 100-x, y);
+    return {k:m.k, x:Math.min(1,Math.max(0,u)), y:Math.min(1,Math.max(0,v))};
+  });
+  return true;
+}
+function startAlign(side, el){
+  const stage = el.querySelector('.earStage');
+  const btns = el.querySelector('.earBtns');
+  const taps = [];
+  stage.classList.add('aligning');
+  const msg = document.createElement('div'); msg.className='alignMsg';
+  stage.parentNode.insertBefore(msg, stage);
+  const show = ()=>{ msg.textContent = LM_TEXT[taps.length] + (side==='left' ? '(左耳は左右が逆です。顔側は写真の左側)' : ''); };
+  show();
+  btns.innerHTML = '<button class="btn small ghost" type="button" id="alignCancel">やめる</button>';
+  btns.querySelector('#alignCancel').addEventListener('click', ()=> renderEarStage(side));
+  stage.addEventListener('pointerdown', function onTap(e){
+    e.preventDefault();
+    const r = stage.getBoundingClientRect();
+    const x = Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)), y = Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));
+    taps.push([x,y]);
+    const lm = document.createElement('div'); lm.className='lm'; lm.textContent = taps.length;
+    lm.style.left=(x*100)+'%'; lm.style.top=(y*100)+'%'; stage.appendChild(lm);
+    if(taps.length<3){ show(); return; }
+    stage.removeEventListener('pointerdown', onTap);
+    if(!applyAlign(side, taps)) alert('うまく合わせられませんでした。3か所を離してタップしてください');
+    renderEarStage(side);
+  });
+}
+
 function syncMarks(){
   const pts = earPoints(earForm);
   ['right','left'].forEach(side=>{
@@ -572,6 +625,7 @@ function renderEarStage(side){
   } else {
     el.innerHTML = stageHtml(d.photo, d.marks, false) +
       `<div class="earBtns"><label class="btn small secondary" style="cursor:pointer;">撮り直す<input type="file" accept="image/*" capture="environment" data-side="${side}" style="display:none;"></label>
+       <button class="btn small" type="button" data-align="${side}">📍 3か所タップで点を耳に合わせる</button>
        <button class="btn small ghost" type="button" data-reset="${side}">点を初期位置に戻す</button></div>`;
     const stage = el.querySelector('.earStage');
     stage.querySelectorAll('.mk').forEach(mk=>{
@@ -589,6 +643,7 @@ function renderEarStage(side){
         mk.addEventListener('pointermove', move); mk.addEventListener('pointerup', up); mk.addEventListener('pointercancel', up);
       });
     });
+    el.querySelector('[data-align]').addEventListener('click', ()=> startAlign(side, el));
     el.querySelector('[data-reset]').addEventListener('click', ()=>{
       d.marks = d.marks.map(m=>defaultMark(m.k, side));
       renderEarStage(side);
