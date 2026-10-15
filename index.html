@@ -518,8 +518,10 @@ $('saveVisitBtn').addEventListener('click', ()=> saveEarVisit());
 // 便秘点は図に載っていないため、直腸・大腸の近くに置いた仮の位置(要確認)。上顎/下顎は図では「顎」1か所のため近接配置。
 const EAR_POS = {
   '神門':[72,31],'腎':[58,54],'胃':[58,76],'直腸':[86,59],'大腸':[84,46],'便秘点':[80,53],'肩':[32,69],
-  '心':[68,88],'肺':[62,81],'飢点':[89,87],'渇点':[89,70],'内分泌':[75,105],'枕':[55,95],'頸椎':[52,84],
-  '上顎':[56,116],'下顎':[53,121],'眼':[70,124],'面頰':[58,126]
+  '心':[68,88],'肺':[62,81],'飢点':[89,87],'渇点':[89,70],'内分泌':[75,105],'頸椎':[52,84],
+  '上顎':[56,116],'下顎':[53,121],'眼':[70,124],'面頰':[58,126],
+  // 以下5点は『耳ツボ大地図帖』の全体図から、既存の点との位置関係で読み取った目安(2026-10-14追加)
+  '後頭':[50,101],'側頭':[59,96],'内耳':[52,131],'交感':[88,33],'腰椎':[43,53]
 };
 // 「ねらい」は効果効能の表現ではなく、気分・習慣としてのご案内用の説明です。
 const COURSES = [
@@ -530,17 +532,26 @@ const COURSES = [
   {id:'E',name:'腸',points:['直腸','大腸','肺'],aim:'お腹まわりやお通じのリズムを意識したい方のご案内用。'},
   {id:'F',name:'腎',points:['腎','渇点','心'],aim:'年齢を重ねて、めぐりやうるおいを意識したい方のご案内用。'},
   {id:'G',name:'夜のいたわり(追加コース)',points:['神門','内分泌','腎','心'],aim:'気分のゆらぎが気になる時期を、おだやかに過ごしたい方のご案内用。'},
-  {id:'H',name:'おやすみ前(追加コース)',points:['神門','腎','心','枕'],aim:'寝る前のリラックス習慣をつくりたい方のご案内用。'},
+  {id:'H',name:'おやすみ前(追加コース)',points:['神門','腎','心','後頭'],aim:'寝る前のリラックス習慣をつくりたい方のご案内用。'},
   {id:'I',name:'すっきりボディ(追加コース)',points:['飢点','胃','神門'],aim:'食べ過ぎが気になる方の、食習慣を意識するきっかけのご案内用。'},
-  {id:'J',name:'お通じケア(追加コース)',points:['便秘点','大腸','神門'],aim:'お通じのリズムを意識したい方のご案内用。'}
+  {id:'J',name:'お通じケア(追加コース)',points:['便秘点','大腸','神門'],aim:'お通じのリズムを意識したい方のご案内用。'},
+  // 看板メニュー(両耳6か所の基本形)。8か所・10か所は「追加するツボ」から足す:
+  //  頭スッキリ 8=＋内分泌 / 10=＋内分泌・後頭、こりほぐし 8=＋内分泌 / 10=＋内分泌・頸椎、ゆらぎ・ぐっすり 8=＋腎 / 10=＋腎・交感
+  {id:'K',name:'頭スッキリ(看板)',points:['神門','側頭','内耳'],aim:'頭まわりの重さやふらつき感が気になる方の、すっきりタイムのご案内用。8か所は＋内分泌、10か所は＋内分泌・後頭。'},
+  {id:'L',name:'こりほぐし(看板)',points:['神門','肩','腰椎'],aim:'肩や腰のこわばりが気になる方の、ほぐしタイムのご案内用。8か所は＋内分泌、10か所は＋内分泌・頸椎。'},
+  {id:'M',name:'ゆらぎ・ぐっすり(看板)',points:['神門','内分泌','後頭'],aim:'更年期世代の、眠りや冷え・のぼせ感が気になる時期をおだやかに過ごしたい方のご案内用。8か所は＋腎、10か所は＋腎・交感。'}
 ];
 const CONCERNS = [
   {label:'フェイスライン・顔のむくみ感',c:['A']},{label:'肌荒れ・くすみ',c:['B']},
-  {label:'食べ過ぎ・体型',c:['C','I']},{label:'肩のつらさ・目の疲れ',c:['D']},
-  {label:'お腹・お通じ',c:['E','J']},{label:'冷え・むくみ・年齢サイン',c:['F']},
-  {label:'更年期・気分のゆらぎ',c:['G']},{label:'眠り・寝つき',c:['H']}
+  {label:'食べ過ぎ・体型',c:['C','I']},{label:'肩のつらさ・目の疲れ',c:['L','D']},
+  {label:'お腹・お通じ',c:['E','J']},{label:'冷え・むくみ・年齢サイン',c:['F','M']},
+  {label:'更年期・気分のゆらぎ',c:['M','G']},{label:'眠り・寝つき',c:['M','H']},
+  {label:'頭の重さ・ふらつき感',c:['K']},{label:'腰のつらさ',c:['L']}
 ];
 const courseById = (id)=> COURSES.find(c=>c.id===id);
+// 旧名→新名(「枕」は「後頭」にまとめた。過去の記録を開いても壊れないように読み替える)
+const RENAME = {'枕':'後頭'};
+const rn = (k)=> RENAME[k] || k;
 
 let earForm = null; // {concerns:[], course:'', extra:[], right:{photo,marks}, left:{photo,marks}}
 
@@ -708,9 +719,9 @@ $('earDateTime').addEventListener('input', updateNotifyInfo);
 function openEarForm(v){
   const c = customers.find(c=>c.id===currentCustomerId);
   earForm = v ? {
-    concerns:[...(v.concerns||[])], course:v.course||'', extra:[...(v.extra||[])],
-    right:{photo:v.right&&v.right.photo||null, marks:JSON.parse(JSON.stringify(v.right&&v.right.marks||[]))},
-    left:{photo:v.left&&v.left.photo||null, marks:JSON.parse(JSON.stringify(v.left&&v.left.marks||[]))}
+    concerns:[...(v.concerns||[])], course:v.course||'', extra:[...new Set((v.extra||[]).map(rn))],
+    right:{photo:v.right&&v.right.photo||null, marks:JSON.parse(JSON.stringify(v.right&&v.right.marks||[])).map(m=>({...m,k:rn(m.k)}))},
+    left:{photo:v.left&&v.left.photo||null, marks:JSON.parse(JSON.stringify(v.left&&v.left.marks||[])).map(m=>({...m,k:rn(m.k)}))}
   } : {concerns:[], course:'', extra:[], right:{photo:null,marks:[]}, left:{photo:null,marks:[]}};
   $('visitFormTitle').textContent = (v?'耳つぼの記録を編集':'耳つぼの記録を追加') + (c?`(${c.name} 様)`:'');
   $('earDateTime').value = v ? v.datetime : nowLocal();
