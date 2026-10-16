@@ -149,6 +149,7 @@
     <div>
       <p class="eyebrow">耳つぼジュエリー</p>
       <h1 id="pageTitle">耳つぼカルテ</h1>
+      <p id="appVersion" style="font-size:11px;color:var(--ink-soft);margin:2px 0 0;">2026-10-16版</p>
     </div>
     <button class="btn small ghost" id="dataMenuBtn">データ</button>
   </header>
@@ -585,7 +586,7 @@ function defaultMark(k, side){
 }
 // 耳の目印3か所(耳の一番上・耳たぶの一番下・顔側に一番出ているところ)の標準位置(右耳・x0-100,y0-140)
 const LM_STD = [[65,0],[68,140],[100,57]];
-const LM_TEXT = ['① 耳の「一番上」をタップ','② 耳たぶの「一番下」をタップ','③ 耳の「顔側に一番出ているところ(耳珠のあたり)」をタップ'];
+const LM_TEXT = ['① 耳の「一番上」をタップ','② 耳たぶの「一番下」をタップ','③ 耳の穴の手前にある小さな出っ張り(耳珠)の先をタップ。耳の穴にフタをするように指で押せる軟骨です'];
 // 標準位置の3点 → 写真上の3点 へのアフィン変換(傾き・大きさ・向きに自動で合わせる)
 function affineFrom(S, P){
   const det3 = (a)=> a[0][0]*(a[1][1]*a[2][2]-a[1][2]*a[2][1]) - a[0][1]*(a[1][0]*a[2][2]-a[1][2]*a[2][0]) + a[0][2]*(a[1][0]*a[2][1]-a[1][1]*a[2][0]);
@@ -647,7 +648,7 @@ async function openEarCamera(side){
   }
   const wrap = document.createElement('div'); wrap.className='camWrap';
   wrap.innerHTML = `<video playsinline autoplay muted></video><svg></svg>
-    <div class="camMsg">${side==='right'?'右耳':'左耳'}を点線の枠に合わせてください。<br>青い3つの丸(耳の一番上・耳たぶの一番下・耳珠)に耳を重ねて、近づいたり離れたりして大きさを合わせます。</div>
+    <div class="camMsg">${side==='right'?'右耳':'左耳'}を点線の枠に合わせてください。<br>青い3つの丸(耳の一番上・耳たぶの一番下・耳の穴の手前の出っ張り)に耳を重ねて、近づいたり離れたりして大きさを合わせます。</div>
     <div class="camBar"><button class="btn small" type="button" data-x>やめる</button><button class="camShot" type="button" aria-label="撮影"></button><span style="width:64px"></span></div>`;
   document.body.appendChild(wrap);
   const video = wrap.querySelector('video'), svg = wrap.querySelector('svg');
@@ -670,7 +671,7 @@ async function openEarCamera(side){
     const ear = [[65,0],[86,6],[95,28],[100,57],[90,80],[86,100],[80,124],[68,140],[48,136],[36,118],[28,96],[18,72],[10,46],[22,16],[42,3]].map(p=>P(...p));
     let d = `M${ear[0][0]},${ear[0][1]}`;
     for(let i=0;i<ear.length;i++){ const a=ear[i], b=ear[(i+1)%ear.length]; const m=[(a[0]+b[0])/2,(a[1]+b[1])/2]; d += ` Q${a[0]},${a[1]} ${m[0]},${m[1]}`; }
-    const lm = LM_STD.map(p=>P(...p)), labels=['耳の一番上','耳たぶの一番下','耳珠'];
+    const lm = LM_STD.map(p=>P(...p)), labels=['耳の一番上','耳たぶの一番下','耳の穴の手前の出っ張り'];
     svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
     svg.innerHTML = `<path d="M0,0H${W}V${H}H0Z M${box.x},${box.y}h${bw}v${bh}h${-bw}Z" fill="rgba(0,0,0,.45)" fill-rule="evenodd"/>
       <rect x="${box.x}" y="${box.y}" width="${bw}" height="${bh}" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/>
