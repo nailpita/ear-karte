@@ -118,14 +118,22 @@
   .earBlock h3{font-size:14px;margin:0 0 8px;font-family:'Zen Kaku Gothic New',sans-serif;}
   .earStage{position:relative;width:100%;max-width:420px;margin:0 auto 8px;line-height:0;touch-action:none;user-select:none;-webkit-user-select:none;}
   .earStage img{width:100%;display:block;border-radius:10px;}
-  .earStage .mk{position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none;}
+  .earStage .mk{position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none;padding:8px;}
   .earStage.static .mk{cursor:default;}
   .earStage .dot{display:block;width:18px;height:18px;border-radius:50%;background:rgba(184,92,122,.85);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);margin:0 auto;}
-  .earStage .lbl{position:absolute;left:50%;top:20px;transform:translateX(-50%);white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;color:#fff;background:rgba(43,35,32,.75);padding:1px 5px;border-radius:4px;}
+  .earStage .lbl{pointer-events:none;position:absolute;left:50%;top:30px;transform:translateX(-50%);white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;color:#fff;background:rgba(43,35,32,.75);padding:1px 5px;border-radius:4px;}
   .earStage.static .dot{width:14px;height:14px;}
   .earBtns{display:flex;gap:8px;flex-wrap:wrap;}
   .earStage.aligning{cursor:crosshair;outline:3px solid #b85c7a;border-radius:10px;}
   .earStage.aligning .mk{pointer-events:none;opacity:.35;}
+  .earHint{font-size:12.5px;line-height:1.6;background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:6px 10px;margin:0 auto 8px;max-width:420px;}
+  .camWrap{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;}
+  .camWrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .camWrap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+  .camMsg{position:absolute;top:max(14px,env(safe-area-inset-top));left:12px;right:12px;color:#fff;font-size:14px;line-height:1.6;text-align:center;background:rgba(0,0,0,.55);border-radius:10px;padding:8px 10px;}
+  .camBar{position:absolute;left:0;right:0;bottom:max(20px,env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;gap:28px;}
+  .camShot{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.5);background-clip:padding-box;cursor:pointer;}
+  .camBar .btn{background:rgba(0,0,0,.55);}
   .earStage .lm{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#2b6cb0;color:#fff;font-size:13px;font-weight:700;line-height:22px;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none;}
   .alignMsg{font-size:14px;font-weight:700;color:#b85c7a;margin:4px 0 6px;line-height:1.5;}
   .consent{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:8px;}
@@ -552,6 +560,18 @@ const courseById = (id)=> COURSES.find(c=>c.id===id);
 // 旧名→新名(「枕」は「後頭」にまとめた。過去の記録を開いても壊れないように読み替える)
 const RENAME = {'枕':'後頭'};
 const rn = (k)=> RENAME[k] || k;
+// 点をタップしたときに出す「区画のヒント」(位置を覚えるための目安)
+const ZONE = {
+  '神門':'三角窩(耳の上の三角形のくぼみ)の上寄り','交感':'三角窩の下の横向きの軟骨をたどり、耳輪の下に隠れる先端',
+  '腰椎':'対耳輪(真ん中を縦に走る盛り上がり)の上の方','頸椎':'対耳輪の下の方(対珠に近いところ)',
+  '肩':'耳舟(外側のふちと縦の軟骨の間の溝)の真ん中あたり','腎':'耳の穴の上のくぼみ(耳甲介舟)の上側、横の軟骨のすぐ下',
+  '心':'耳の穴のすぐ外の一番深いくぼみ(耳甲介腔)の中央','肺':'心のまわり(耳甲介腔)','胃':'耳の穴の上、横の軟骨が消えるあたり',
+  '内分泌':'耳の穴に指を入れて下へすべらせ、指の腹が当たる底(耳珠と対珠の間の切れ込みの内側)',
+  '後頭':'対珠(耳たぶのすぐ上の出っ張り)の後ろ寄り','側頭':'対珠の上寄り','内耳':'耳たぶの中',
+  '大腸':'耳の穴の上のくぼみの、顔側寄り','直腸':'耳輪のはじまり(顔側)の近く','便秘点':'大腸・直腸の近く(仮の位置)',
+  '飢点':'耳珠(顔側の出っ張り)の下寄り','渇点':'耳珠の上寄り','上顎':'耳たぶの上の方','下顎':'耳たぶの上の方(上顎の少し下)',
+  '眼':'耳たぶの真ん中','面頰':'耳たぶの中、眼のまわり'
+};
 
 let earForm = null; // {concerns:[], course:'', extra:[], right:{photo,marks}, left:{photo,marks}}
 
@@ -612,6 +632,71 @@ function startAlign(side, el){
   });
 }
 
+function showHint(side, k){
+  const el = document.getElementById('hint-'+side); if(!el) return;
+  el.textContent = `${k}：${ZONE[k] || '区画のヒントは準備中です'}`;
+}
+
+// ===== ガイド付きカメラ =====
+// 標準の耳の枠(横100:縦140)を画面に出し、その枠の中だけを写真として保存する。
+// 枠の中の3つの目印(耳の一番上・耳たぶの一番下・耳珠)に耳を合わせて撮れば、点の初期位置がそのまま耳に合う。
+let camStream = null;
+async function openEarCamera(side){
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    alert('この端末ではガイド付きカメラが使えません。「ふつうのカメラ・写真から選ぶ」で撮影し、3か所タップで合わせてください。'); return;
+  }
+  const wrap = document.createElement('div'); wrap.className='camWrap';
+  wrap.innerHTML = `<video playsinline autoplay muted></video><svg></svg>
+    <div class="camMsg">${side==='right'?'右耳':'左耳'}を点線の枠に合わせてください。<br>青い3つの丸(耳の一番上・耳たぶの一番下・耳珠)に耳を重ねて、近づいたり離れたりして大きさを合わせます。</div>
+    <div class="camBar"><button class="btn small" type="button" data-x>やめる</button><button class="camShot" type="button" aria-label="撮影"></button><span style="width:64px"></span></div>`;
+  document.body.appendChild(wrap);
+  const video = wrap.querySelector('video'), svg = wrap.querySelector('svg');
+  const close = ()=>{ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } wrap.remove(); window.removeEventListener('resize', draw); };
+  wrap.querySelector('[data-x]').addEventListener('click', close);
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
+  }catch(err){
+    close(); alert('カメラを使う許可が出ませんでした。iPhoneの設定 → Safari → カメラ を「許可」にするか、「ふつうのカメラ・写真から選ぶ」を使ってください。'); return;
+  }
+  video.srcObject = camStream;
+  // 画面上の枠(標準座標 0-100 × 0-140)
+  let box = null;
+  function draw(){
+    const W = wrap.clientWidth, H = wrap.clientHeight;
+    const bh = Math.min(H*0.62, W*0.8*1.4), bw = bh/1.4;
+    box = {x:(W-bw)/2, y:(H-bh)/2 - H*0.02, w:bw, h:bh};
+    const P = (sx,sy)=>{ const x = side==='right' ? sx : 100-sx; return [box.x + x/100*bw, box.y + sy/140*bh]; };
+    // 耳の外形の目安(なめらかな曲線)
+    const ear = [[65,0],[86,6],[95,28],[100,57],[90,80],[86,100],[80,124],[68,140],[48,136],[36,118],[28,96],[18,72],[10,46],[22,16],[42,3]].map(p=>P(...p));
+    let d = `M${ear[0][0]},${ear[0][1]}`;
+    for(let i=0;i<ear.length;i++){ const a=ear[i], b=ear[(i+1)%ear.length]; const m=[(a[0]+b[0])/2,(a[1]+b[1])/2]; d += ` Q${a[0]},${a[1]} ${m[0]},${m[1]}`; }
+    const lm = LM_STD.map(p=>P(...p)), labels=['耳の一番上','耳たぶの一番下','耳珠'];
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    svg.innerHTML = `<path d="M0,0H${W}V${H}H0Z M${box.x},${box.y}h${bw}v${bh}h${-bw}Z" fill="rgba(0,0,0,.45)" fill-rule="evenodd"/>
+      <rect x="${box.x}" y="${box.y}" width="${bw}" height="${bh}" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/>
+      <path d="${d} Z" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="8 6"/>
+      ${lm.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="rgba(43,108,176,.85)" stroke="#fff" stroke-width="2"/>
+        <text x="${p[0] + (i===2 ? (side==='right'?-14:14) : 0)}" y="${p[1] + (i===0?-16:i===1?26:5)}" fill="#fff" font-size="13" font-weight="700" text-anchor="${i===2?(side==='right'?'end':'start'):'middle'}" style="paint-order:stroke;stroke:rgba(0,0,0,.7);stroke-width:3px">${labels[i]}</text>`).join('')}`;
+  }
+  draw(); window.addEventListener('resize', draw);
+  wrap.querySelector('.camShot').addEventListener('click', ()=>{
+    const vw = video.videoWidth, vh = video.videoHeight; if(!vw || !vh) return;
+    // object-fit:cover の見え方から、画面上の枠を動画の画素に換算
+    const W = wrap.clientWidth, H = wrap.clientHeight, s = Math.max(W/vw, H/vh);
+    const offX = (W - vw*s)/2, offY = (H - vh*s)/2;
+    const sx = (box.x-offX)/s, sy = (box.y-offY)/s, sw = box.w/s, sh = box.h/s;
+    const outW = Math.min(900, Math.round(sw)), outH = Math.round(outW*1.4);
+    const c = document.createElement('canvas'); c.width = outW; c.height = outH;
+    c.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
+    const d = earForm[side];
+    d.photo = c.toDataURL('image/jpeg', 0.8);
+    d.marks = earPoints(earForm).map(k=> defaultMark(k, side)); // 枠に合わせて撮ったので初期位置がそのまま耳に合う
+    d.undo = null;
+    close();
+    renderEarStage(side);
+  });
+}
+
 function syncMarks(){
   const pts = earPoints(earForm);
   ['right','left'].forEach(side=>{
@@ -631,12 +716,16 @@ function renderEarStage(side){
   const d = earForm[side];
   const name = side==='right' ? '右耳' : '左耳';
   if(!d.photo){
-    el.innerHTML = `<label class="photoPicker" style="margin-bottom:6px;"><input type="file" accept="image/*" capture="environment" data-side="${side}"><span>📷 ${name}を撮影・選択</span></label>
-      <div class="tiny">耳が画面いっぱいになるよう、耳の真横からまっすぐ撮影してください。髪は耳にかけてください。</div>`;
+    el.innerHTML = `<button class="btn" type="button" data-cam="${side}" style="width:100%;margin-bottom:8px;">📷 ガイド付きで${name}を撮影(おすすめ)</button>
+      <label class="photoPicker" style="margin-bottom:6px;"><input type="file" accept="image/*" capture="environment" data-side="${side}"><span>ふつうのカメラ・写真から選ぶ</span></label>
+      <div class="tiny">ガイド付きで撮ると、耳の大きさや距離が違っても点がほぼ正しい位置に出ます。髪は耳にかけてください。</div>`;
+    el.querySelector('[data-cam]').addEventListener('click', ()=> openEarCamera(side));
   } else {
     el.innerHTML = stageHtml(d.photo, d.marks, false) +
-      `<div class="earBtns"><label class="btn small secondary" style="cursor:pointer;">撮り直す<input type="file" accept="image/*" capture="environment" data-side="${side}" style="display:none;"></label>
+      `<div class="earHint" id="hint-${side}">点をタップすると、その点がある区画のヒントが出ます。</div>
+      <div class="earBtns"><button class="btn small secondary" type="button" data-cam="${side}">📷 ガイド付きで撮り直す</button><label class="btn small ghost" style="cursor:pointer;">写真から選ぶ<input type="file" accept="image/*" capture="environment" data-side="${side}" style="display:none;"></label>
        <button class="btn small" type="button" data-align="${side}">📍 3か所タップで点を耳に合わせる</button>
+       ${d.undo ? `<button class="btn small ghost" type="button" data-undo="${side}">↩ 今動かした点を戻す</button>` : ''}
        <button class="btn small ghost" type="button" data-reset="${side}">点を初期位置に戻す</button></div>`;
     const stage = el.querySelector('.earStage');
     stage.querySelectorAll('.mk').forEach(mk=>{
@@ -644,17 +733,33 @@ function renderEarStage(side){
         e.preventDefault();
         mk.setPointerCapture(e.pointerId);
         const mark = d.marks.find(m=>m.k===mk.dataset.k);
+        // 指を置いただけでは動かさない。6px以上動かしたときだけ、指との距離を保ったまま動かす
+        const sx = e.clientX, sy = e.clientY, ox = mark.x, oy = mark.y;
+        let dragging = false;
         const move = (ev)=>{
+          const dx = ev.clientX - sx, dy = ev.clientY - sy;
+          if(!dragging){
+            if(Math.hypot(dx,dy) < 6) return;
+            dragging = true;
+            d.undo = {k:mark.k, x:ox, y:oy};
+          }
           const r = stage.getBoundingClientRect();
-          mark.x = Math.min(1, Math.max(0, (ev.clientX - r.left)/r.width));
-          mark.y = Math.min(1, Math.max(0, (ev.clientY - r.top)/r.height));
+          mark.x = Math.min(1, Math.max(0, ox + dx/r.width));
+          mark.y = Math.min(1, Math.max(0, oy + dy/r.height));
           mk.style.left = (mark.x*100)+'%'; mk.style.top = (mark.y*100)+'%';
         };
-        const up = ()=>{ mk.removeEventListener('pointermove', move); mk.removeEventListener('pointerup', up); mk.removeEventListener('pointercancel', up); };
+        const up = ()=>{ mk.removeEventListener('pointermove', move); mk.removeEventListener('pointerup', up); mk.removeEventListener('pointercancel', up); if(dragging) renderEarStage(side); else showHint(side, mark.k); };
         mk.addEventListener('pointermove', move); mk.addEventListener('pointerup', up); mk.addEventListener('pointercancel', up);
       });
     });
     el.querySelector('[data-align]').addEventListener('click', ()=> startAlign(side, el));
+    el.querySelector('[data-cam]').addEventListener('click', ()=> openEarCamera(side));
+    const ub = el.querySelector('[data-undo]');
+    if(ub) ub.addEventListener('click', ()=>{
+      const m = d.marks.find(m=>m.k===d.undo.k);
+      if(m){ m.x = d.undo.x; m.y = d.undo.y; }
+      d.undo = null; renderEarStage(side);
+    });
     el.querySelector('[data-reset]').addEventListener('click', ()=>{
       d.marks = d.marks.map(m=>defaultMark(m.k, side));
       renderEarStage(side);
